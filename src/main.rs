@@ -124,8 +124,6 @@ async fn main(spawner: Spawner) {
         tasks::uart::uart_bridge_task_pio_1_sm_0(uart3_rx, uart3_tx, class2)
             .expect("uart_pio_2 spawn failed"),
     );
-    //spawner
-    //    .spawn(tasks::uart::uart_bridge_task(uart_rx, uart_tx, class2).expect("uart spawn failed"));
     loop {
         embassy_time::Timer::after_secs(1).await;
     }
