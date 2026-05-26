@@ -1,8 +1,8 @@
+use core::f32;
+
 use embassy_executor::Spawner;
 
-use embassy_rp::gpio::{Output, Pin};
-use embassy_rp::peripherals::{PIO0, PIO1};
-use embassy_rp::pio_programs::ws2812::{self, Grb, PioWs2812};
+use embassy_rp::gpio::Output;
 
 use embassy_time::{Duration, Ticker};
 
@@ -26,7 +26,7 @@ pub async fn ws2812_task(mut ws2812: SingleWs2812<'static>) {
             let sin_value = breathe(time);
             ws2812.write(0,sin_value,0);
             time += 0.2; 
-            if time > 6.28318 
+            if time > f32::consts::TAU
             {
                 time = 0.0;
             }   

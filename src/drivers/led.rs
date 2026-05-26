@@ -1,5 +1,5 @@
 use cortex_m::asm::delay as delay_cycles;
-use embassy_rp::gpio::{Level, Output, Pin};
+use embassy_rp::gpio::Output;
 
 pub struct SingleWs2812<'d> {
     pin: Output<'d>,
@@ -45,7 +45,6 @@ impl<'d> SingleWs2812<'d> {
             let end_time = unsafe { timer_raw_l.read_volatile() };
             let elapsed_us = end_time.wrapping_sub(start_time);
 
-            // Ajustado o teto para 38us para dar margem à folga do bit 0
             if elapsed_us > 38 {
                 corrupted = true;
             }
@@ -54,7 +53,6 @@ impl<'d> SingleWs2812<'d> {
                 break;
             }
 
-            // Se falhar por interrupção, força o reset do LED
             delay_cycles(7500); // 60us
         }
     }

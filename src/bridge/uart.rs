@@ -11,7 +11,7 @@ use embedded_io_async::{Read, Write};
 pub async fn run_bridge<R, W>(
     mut rx: R,
     mut tx: W,
-    mut cdc: CdcAcmClass<'static, Driver<'static, USB>>,
+    cdc: CdcAcmClass<'static, Driver<'static, USB>>,
 )
 where
     R: Read,

@@ -1,6 +1,6 @@
 use embassy_rp::pio_programs::uart::{PioUartRx, PioUartTx};
 use embassy_rp::uart::{
-    Async, Blocking, BufferedUartRx, BufferedUartTx, UartRx, UartTx
+    BufferedUartRx, BufferedUartTx
 };
 use embassy_rp::peripherals::{
     PIO0, PIO1, USB

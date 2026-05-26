@@ -1,26 +1,19 @@
 #![no_std]
 #![no_main]
 
-use defmt::expect;
 use embassy_executor::Spawner;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::peripherals::DMA_CH1;
 use embassy_rp::usb::InterruptHandler as UsbInterruptHandler;
 use embassy_rp::{
     bind_interrupts,
-    peripherals::{DMA_CH0, PIO0, PIO1, UART0, USB},
+    peripherals::{PIO0, PIO1, UART0, USB},
     pio::{InterruptHandler, Pio},
-    pio_programs::{
-        uart::{PioUartRx, PioUartRxProgram, PioUartTx, PioUartTxProgram},
-        ws2812::{PioWs2812, PioWs2812Program},
-    },
-    uart::{BufferedInterruptHandler, BufferedUart, Config},
+    pio_programs::uart::{PioUartRx, PioUartRxProgram, PioUartTx, PioUartTxProgram},
+    uart::{BufferedInterruptHandler, Config},
     usb::Driver,
 };
-use embassy_usb::{
-    class::cdc_acm::{CdcAcmClass, State},
-    Builder,
-};
+use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use static_cell::StaticCell;
 
 use {defmt_rtt as _, panic_probe as _};
@@ -87,7 +80,7 @@ async fn main(spawner: Spawner) {
         CdcAcmClass::new(&mut builder, state, 64)
     };
     let usb = builder.build();
-    let default_uart_config = Config::default();
+    let _default_uart_config = Config::default();
 
     let Pio {
         mut common,

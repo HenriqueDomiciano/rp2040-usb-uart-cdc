@@ -10,7 +10,10 @@ pub async fn usb_task(mut usb: MyUsbDevice) -> ! {
     usb.run().await
 }
 
-struct Disconnected {}
+#[allow(dead_code)]
+struct Disconnected {
+
+}
 
 impl From<EndpointError> for Disconnected {
     fn from(val: EndpointError) -> Self {
