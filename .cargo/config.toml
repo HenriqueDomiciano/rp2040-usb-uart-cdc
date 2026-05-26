@@ -1,0 +1,15 @@
+[build]
+target = "thumbv6m-none-eabi"
+
+[target.thumbv6m-none-eabi]
+runner = "elf2uf2-rs -d"
+rustflags = [
+  "-C",
+  "link-arg=-Tlink.x",
+]
+[env]
+# 3 CDC channels * 2 interfaces per channel = 6 interfaces minimum
+EMBASSY_USB_MAX_INTERFACE_COUNT = "8"
+
+# 3 CDC channels * 3 endpoints per channel = 9 endpoints minimum
+EMBASSY_USB_MAX_HANDLER_COUNT = "12"
