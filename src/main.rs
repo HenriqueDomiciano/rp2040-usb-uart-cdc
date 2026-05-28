@@ -56,7 +56,7 @@ async fn main(spawner: Spawner) {
 
     let led_output = Output::new(p.PIN_16, Level::Low);
     let led =SingleWs2812::new(led_output);
-    spawn_core1(p.CORE1, unsafe { &raw mut CORE1_STACK }, || {
+    spawn_core1(p.CORE1, unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) }, || {
         let executor1 = EXECUTOR1.init(Executor::new());
         executor1.run(|spawner| {
             // You need to pass ws2812 here — see note below
