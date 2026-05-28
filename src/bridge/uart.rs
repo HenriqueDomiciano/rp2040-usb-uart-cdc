@@ -1,39 +1,57 @@
-use embassy_futures::join::{join}; 
-
-use embassy_rp::usb::Driver;
-
-use embassy_rp::peripherals::USB;
-
-use embassy_usb::class::cdc_acm::CdcAcmClass; 
-
+use embassy_futures::join::join;
 use embedded_io_async::{Read, Write};
 
-pub async fn run_bridge<R, W>(
+use crate::bridge::channels::{BridgeChannels, Packet};
+
+
+pub async fn uart_task<R, W>(
     mut rx: R,
     mut tx: W,
-    cdc: CdcAcmClass<'static, Driver<'static, USB>>,
+    channels: &'static BridgeChannels,
 )
 where
-    R: Read,
-    W: Write
+    R: Read + 'static,
+    W: Write + 'static,
 {
-    let (mut tx_cdc, mut rx_cdc) = cdc.split();
+    let uart_rx = async {
+        let mut data = [0u8; 64];
+        loop {
+            // Read first byte (blocking wait)
+            match rx.read(&mut data[0..1]).await {
+                Ok(1) => {}
+                _ => continue,
+            }
+            let mut n = 1;
+            // Try to read more bytes without waiting
+            while n < 64 {
+                match rx.read(&mut data[n..n+1]).await {
+                    Ok(1) => n += 1,
+                    _ => break,
+                }
+                // If no more bytes immediately available, stop accumulating
+                // Use a short timeout to batch bytes arriving close together
+                if n < 64 {
+                    match embassy_time::with_timeout(
+                        embassy_time::Duration::from_micros(500),
+                        rx.read(&mut data[n..n+1])
+                    ).await {
+                        Ok(Ok(1)) => n += 1,
+                        _ => break,
+                    }
+                }
+            }
+            let mut packet_data = [0u8; 64];
+            packet_data[..n].copy_from_slice(&data[..n]);
+            channels.uart_to_usb.send(Packet { data: packet_data, len: n }).await;
+        }
+    };
 
-    let usb_to_uart = async {
-        let mut buff = [0u8;64]; 
-        loop
-        {
-            let n = rx_cdc.read_packet(&mut buff).await.unwrap(); 
-            tx.write(&buff[..n]).await.unwrap(); 
+    let uart_tx = async {
+        loop {
+            let packet = channels.usb_to_uart.receive().await;
+            tx.write_all(&packet.data[..packet.len]).await.ok();
         }
-    }; 
-    let uart_to_usb = async {
-        let mut buff = [0u8;64]; 
-        loop
-        {
-            let n = rx.read(&mut buff).await.unwrap(); 
-            tx_cdc.write_packet(&buff[..n]).await.unwrap(); 
-        }
-    }; 
-    join(usb_to_uart,uart_to_usb).await;
+    };
+
+    join(uart_rx, uart_tx).await;
 }

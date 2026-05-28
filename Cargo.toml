@@ -26,6 +26,7 @@ embassy-time = { git = "https://github.com/embassy-rs/embassy", branch="main", f
 embassy-usb = { git = "https://github.com/embassy-rs/embassy", branch="main", features = ["defmt","max-interface-count-8"]}
 embassy-futures = { git = "https://github.com/embassy-rs/embassy", branch="main" }
 embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy", branch="main" }
+embassy-sync = "0.8.0"
 
 [package.metadata.embassy_rp]
 task_arena_size = 65536

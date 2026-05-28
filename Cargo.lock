@@ -353,7 +353,7 @@ source = "git+https://github.com/embassy-rs/embassy?branch=main#7f8bb6f4ca46e1da
 dependencies = [
  "embassy-futures",
  "embassy-hal-internal",
- "embassy-sync",
+ "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?branch=main)",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0",
  "embedded-hal-async",
@@ -420,7 +420,7 @@ source = "git+https://github.com/embassy-rs/embassy?branch=main#7f8bb6f4ca46e1da
 dependencies = [
  "embassy-futures",
  "embassy-net-driver",
- "embassy-sync",
+ "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?branch=main)",
 ]
 
 [[package]]
@@ -438,7 +438,7 @@ dependencies = [
  "embassy-embedded-hal",
  "embassy-futures",
  "embassy-hal-internal",
- "embassy-sync",
+ "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?branch=main)",
  "embassy-time",
  "embassy-time-driver",
  "embassy-time-queue-utils",
@@ -461,6 +461,20 @@ dependencies = [
  "rp2040-boot2",
  "sha2-const-stable",
  "smart-leds",
+]
+
+[[package]]
+name = "embassy-sync"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7bbd85cf5a5ae56bdf26f618364af642d1d0a4e245cdd75cd9aabda382f65a81"
+dependencies = [
+ "cfg-if",
+ "critical-section",
+ "embedded-io-async",
+ "futures-core",
+ "futures-sink",
+ "heapless 0.9.3",
 ]
 
 [[package]]
@@ -518,7 +532,7 @@ dependencies = [
  "defmt",
  "embassy-futures",
  "embassy-net-driver-channel",
- "embassy-sync",
+ "embassy-sync 0.8.0 (git+https://github.com/embassy-rs/embassy?branch=main)",
  "embassy-time",
  "embassy-usb-driver",
  "embedded-io-async",
@@ -1276,6 +1290,7 @@ dependencies = [
  "embassy-executor",
  "embassy-futures",
  "embassy-rp",
+ "embassy-sync 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "embassy-time",
  "embassy-usb",
  "embedded-io-async",

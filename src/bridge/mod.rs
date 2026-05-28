@@ -1,1 +1,2 @@
-pub mod uart; 
+pub mod channels;
+pub mod uart;
