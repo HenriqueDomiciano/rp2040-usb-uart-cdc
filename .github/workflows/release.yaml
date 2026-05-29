@@ -21,6 +21,9 @@ jobs:
         with:
           targets: thumbv6m-none-eabi
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y libudev-dev
+      
       - name: Install flip-link
         run: cargo install flip-link
 
