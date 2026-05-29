@@ -1,3 +1,4 @@
+use crate::bridge::channels::{BridgeChannels, Packet};
 use embassy_futures::{
     join::join,
     select::{select, Either},
@@ -5,7 +6,6 @@ use embassy_futures::{
 use embassy_rp::clocks::clk_sys_freq;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::{Read, Write};
-use crate::bridge::channels::{BridgeChannels, Packet};
 
 pub async fn uart_task<R, W>(
     mut rx: R,
@@ -22,15 +22,13 @@ pub async fn uart_task<R, W>(
         let mut data = [0u8; 64];
 
         loop {
-            if let Some(new_baud) = channels.baud_rate.try_take() 
-            {
-                defmt::info!("UART Rx Baud Rate changed to {}",new_baud);
+            if let Some(new_baud) = channels.baud_rate.try_take() {
+                defmt::info!("UART Rx Baud Rate changed to {}", new_baud);
                 set_pio_baud(pio_index, sm_rx, new_baud);
                 set_pio_baud(pio_index, sm_tx, new_baud);
             }
-            
-            match select(rx.read(&mut data[0..1]), channels.baud_rate.wait(),).await
-            {
+
+            match select(rx.read(&mut data[0..1]), channels.baud_rate.wait()).await {
                 Either::First(Ok(1)) => {}
                 Either::Second(new_baud) => {
                     set_pio_baud(pio_index, sm_rx, new_baud);
@@ -81,7 +79,7 @@ pub async fn uart_task<R, W>(
 }
 
 fn set_pio_baud(pio_index: usize, sm: usize, baud: u32) {
-    let  baud = baud.clamp(300,921600); 
+    let baud = baud.clamp(300, 921600);
     let div = clk_sys_freq() / (8 * baud);
     let div_int = (div as u16).max(1);
 
