@@ -13,3 +13,6 @@ EMBASSY_USB_MAX_INTERFACE_COUNT = "8"
 
 # 3 CDC channels * 3 endpoints per channel = 9 endpoints minimum
 EMBASSY_USB_MAX_HANDLER_COUNT = "12"
+
+[alias]
+test-host = "rustc -- --edition 2021 tests/unit_tests.rs --test -o /tmp/unit_tests && /tmp/unit_tests"

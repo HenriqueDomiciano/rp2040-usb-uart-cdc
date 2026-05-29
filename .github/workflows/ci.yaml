@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # ─── Unit Tests (host, no hardware needed) ──────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run unit tests
+        run: |
+          rustc --edition 2021 tests/unit_tests.rs --test -o /tmp/unit_tests
+          /tmp/unit_tests
+
+  # ─── Release Build (embedded, thumbv6m-none-eabi) ───────────────────────────
+  build:
+    name: Release Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv6m-none-eabi
+
+      - name: Install flip-link
+        run: cargo install flip-link
+
+      - name: Build release firmware
+        run: cargo build --release
+
+      - name: Install elf2uf2-rs
+        run: cargo install elf2uf2-rs
+
+      - name: Convert ELF to UF2
+        run: |
+          elf2uf2-rs \
+            target/thumbv6m-none-eabi/release/rp2040-project \
+            rp2040-project.uf2
+
+      - name: Upload UF2 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rp2040-project-${{ github.sha }}
+          path: rp2040-project.uf2
+          retention-days: 30

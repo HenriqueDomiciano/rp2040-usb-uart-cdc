@@ -31,3 +31,8 @@ rp-pac = {version = "7.0.0", features=["rp2040"]}
 
 [package.metadata.embassy_rp]
 task_arena_size = 65536
+
+[[test]]
+name = "unit_tests"
+path = "tests/unit_tests.rs"
+harness = true
