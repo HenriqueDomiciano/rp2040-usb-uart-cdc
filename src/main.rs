@@ -56,10 +56,9 @@ async fn main(spawner: Spawner) {
 
     let led_output = Output::new(p.PIN_16, Level::Low);
     let led =SingleWs2812::new(led_output);
-    spawn_core1(p.CORE1, unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) }, move|| {
+    spawn_core1(p.CORE1, unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) },move || {
         let executor1 = EXECUTOR1.init(Executor::new());
         executor1.run(|spawner| {
-            // You need to pass ws2812 here — see note below
             spawner.spawn(tasks::led::ws2812_task(led).unwrap());
         });
     });
@@ -122,18 +121,18 @@ async fn main(spawner: Spawner) {
         ..
     } = Pio::new(p.PIO1, Irqs);
 
-    enable_pullup(2);
     enable_pullup(27);
+    enable_pullup(28);
     enable_pullup(12);
     let tx_prg = PioUartTxProgram::new(&mut common);
     let rx_prg = PioUartRxProgram::new(&mut common);
     let tx_prg_pio1 = PioUartTxProgram::new(&mut common_pio1);
     let rx_prg_pio1 = PioUartRxProgram::new(&mut common_pio1);
 
-    let uart1_tx = PioUartTx::new(115_200, &mut common, sm1, p.PIN_1, &tx_prg);
-    let uart1_rx = PioUartRx::new(115_200, &mut common, sm0, p.PIN_2, &rx_prg);
+    let uart1_tx = PioUartTx::new(115_200, &mut common, sm1, p.PIN_2, &tx_prg);
+    let uart1_rx = PioUartRx::new(115_200, &mut common, sm0, p.PIN_27, &rx_prg);
 
-    let uart2_tx = PioUartTx::new(115_200, &mut common, sm3, p.PIN_27, &tx_prg);
+    let uart2_tx = PioUartTx::new(115_200, &mut common, sm3, p.PIN_1, &tx_prg);
     let uart2_rx = PioUartRx::new(115_200, &mut common, sm2, p.PIN_28, &rx_prg);
 
     let uart3_tx = PioUartTx::new(115_200, &mut common_pio1, sm1_pio1, p.PIN_11, &tx_prg_pio1);

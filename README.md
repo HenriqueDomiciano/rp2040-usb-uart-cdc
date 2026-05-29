@@ -9,7 +9,7 @@ Exposes **3 independent serial ports** over a single USB connection, each bridge
 ## Features
 
 - 3x USB CDC ACM serial ports (appear as `/dev/ttyACM0`, `/dev/ttyACM1`, `/dev/ttyACM2` on Linux)
-- 3x PIO-based software UARTs with **runtime baud rate changes** via CDC line coding (300–921600 baud)
+- 3x PIO-based software UARTs with 115200 baud
 - Packet-batched bridging for efficient USB throughput
 - USB disconnect/reconnect handling with channel flush
 - WS2812 RGB LED breathing animation on core 1 (isolated from UART interrupts)
@@ -30,8 +30,8 @@ Exposes **3 independent serial ports** over a single USB connection, each bridge
 
 | Port | RX Pin | TX Pin | PIO Instance |
 |------|--------|--------|--------------|
-| UART 1 | GPIO2 | GPIO1 | PIO0 SM0/SM1 |
-| UART 2 | GPIO28 | GPIO27 | PIO0 SM2/SM3 |
+| UART 1 | GPIO27 | GPIO2 | PIO0 SM0/SM1 |
+| UART 2 | GPIO28 | GPIO1 | PIO0 SM2/SM3 |
 | UART 3 | GPIO12 | GPIO11 | PIO1 SM0/SM1 |
 
 > All RX pins have pull-ups enabled to prevent noise when nothing is connected.
@@ -56,7 +56,6 @@ Core 1: ws2812_task (LED, fully isolated)
 Each `BridgeChannels` instance holds two async channels and a baud rate signal:
 - `usb_to_uart`: packets from USB host → UART TX
 - `uart_to_usb`: packets from UART RX → USB host
-- `baud_rate`: signal carrying a new `u32` baud rate when the host changes line coding
 
 Each channel carries `Packet { data: [u8; 64], len: usize }` with a depth of 4, giving ~576 bytes per bridge.
 
@@ -71,24 +70,6 @@ When USB disconnects:
 2. `usb_tx` is woken via `select()` on the signal and exits cleanly
 3. Both channels are flushed to discard stale data
 4. The outer loop calls `wait_connection()` until USB reconnects
-
-### Runtime Baud Rate Changes
-
-When the host changes the serial port baud rate (e.g. via `stty`, minicom, or an Arduino IDE upload):
-
-1. `usb_rx` reads the new baud rate from `rx_cdc.line_coding().data_rate`
-2. If it differs from the current rate, it signals `channels.baud_rate`
-3. The UART task is waiting on `select(rx.read(), baud_rate.wait())` — the signal preempts the read
-4. `set_pio_baud()` writes the new clock divider directly to the PIO SM CLKDIV register via `rp-pac`
-5. Both RX and TX state machines are updated atomically
-
-The clock divider is calculated as:
-
-```
-div = clk_sys_freq() / (8 * baud_rate)
-```
-
-Supported baud rates are clamped between **300** and **921600** baud. Common rates like 9600, 19200, 38400, 57600, 115200, and 230400 all work correctly at the default 125MHz system clock.
 
 ### WS2812 Driver
 
@@ -171,7 +152,6 @@ The RP2040 has 264KB SRAM total. Static allocations (task pools, USB descriptors
 
 ## Known Limitations
 
-- Baud rate changes take effect immediately but any bytes in flight at the time of the change may be corrupted
 - No hardware flow control (RTS/CTS)
 - Parity and stop bit settings from CDC line coding are acknowledged but not enforced by the PIO UART program
 - The WS2812 driver is blocking — the LED task must run on core 1 to avoid interfering with UART timing

@@ -7,7 +7,7 @@ MEMORY
 
 EXTERN(BOOT2_FIRMWARE)
 
-_stack_size = 0x8000;
+_stack_size = 0x4000;
 
 SECTIONS {
     .boot2 ORIGIN(BOOT2) :

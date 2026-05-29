@@ -1,12 +1,13 @@
 use embassy_futures::join::join;
 use embassy_rp::{peripherals::USB, usb::Driver};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
-use embassy_usb::{class::cdc_acm::CdcAcmClass, driver::EndpointError, UsbDevice};
+use embassy_usb::{UsbDevice, class::cdc_acm::CdcAcmClass, driver::EndpointError};
 
 use crate::bridge::channels::BridgeChannels;
 
 type MyUsbDriver = Driver<'static, USB>;
 type MyUsbDevice = UsbDevice<'static, MyUsbDriver>;
+
 
 #[embassy_executor::task]
 pub async fn usb_task(mut usb: MyUsbDevice) -> ! {
@@ -14,7 +15,9 @@ pub async fn usb_task(mut usb: MyUsbDevice) -> ! {
 }
 
 #[allow(dead_code)]
-struct Disconnected {}
+struct Disconnected {
+
+}
 
 impl From<EndpointError> for Disconnected {
     fn from(val: EndpointError) -> Self {
@@ -24,6 +27,7 @@ impl From<EndpointError> for Disconnected {
         }
     }
 }
+
 
 #[embassy_executor::task(pool_size = 3)]
 pub async fn usb_bridge_task(
@@ -41,22 +45,15 @@ pub async fn usb_bridge_task(
         let disconnect_signal: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
         let usb_rx = async {
-            let mut current_baud = 115200u32; // This by default is always the beggining
             let mut buf = [0u8; 64];
             loop {
                 match rx_cdc.read_packet(&mut buf).await {
                     Ok(n) if n > 0 => {
-                        let new_baud = rx_cdc.line_coding().data_rate();
-                        if new_baud != current_baud && new_baud >= 300 {
-                            current_baud = new_baud;
-                            channels.baud_rate.signal(new_baud);
-                        }
                         let mut data = [0u8; 64];
                         data[..n].copy_from_slice(&buf[..n]);
-                        channels
-                            .usb_to_uart
-                            .send(crate::bridge::channels::Packet { data, len: n })
-                            .await;
+                        channels.usb_to_uart.send(
+                            crate::bridge::channels::Packet { data, len: n }
+                        ).await;
                     }
                     Err(_) => {
                         defmt::info!("USB RX disconnected");
@@ -70,13 +67,11 @@ pub async fn usb_bridge_task(
 
         let usb_tx = async {
             let mut buf = [0u8; 64];
-            loop {
-                // Wait for first packet OR disconnect
+            loop { 
                 let packet = embassy_futures::select::select(
                     channels.uart_to_usb.receive(),
-                    disconnect_signal.wait(),
-                )
-                .await;
+                    disconnect_signal.wait()
+                ).await;
 
                 match packet {
                     embassy_futures::select::Either::First(p) => {
@@ -85,14 +80,11 @@ pub async fn usb_bridge_task(
                             buf[n] = p.data[i];
                             n += 1;
                         }
-                        // Drain additional packets
                         while n < 64 {
                             match channels.uart_to_usb.try_receive() {
                                 Ok(p) => {
                                     for i in 0..p.len {
-                                        if n >= 64 {
-                                            break;
-                                        }
+                                        if n >= 64 { break; }
                                         buf[n] = p.data[i];
                                         n += 1;
                                     }

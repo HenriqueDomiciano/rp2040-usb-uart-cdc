@@ -27,12 +27,6 @@ embassy-usb = { git = "https://github.com/embassy-rs/embassy", branch="main", fe
 embassy-futures = { git = "https://github.com/embassy-rs/embassy", branch="main" }
 embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy", branch="main" }
 embassy-sync = "0.8.0"
-rp-pac = {version = "7.0.0", features=["rp2040"]}
 
 [package.metadata.embassy_rp]
 task_arena_size = 65536
-
-[[test]]
-name = "unit_tests"
-path = "tests/unit_tests.rs"
-harness = true

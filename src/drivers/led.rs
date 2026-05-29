@@ -1,4 +1,4 @@
-use cortex_m::asm::delay as delay_cycles;
+use cortex_m::{asm::delay as delay_cycles, interrupt::free};
 use embassy_rp::gpio::Output;
 
 pub struct SingleWs2812<'d> {
@@ -9,7 +9,8 @@ impl<'d> SingleWs2812<'d> {
     pub fn new(pin: Output<'d>) -> Self {
         Self { pin }
     }
-
+     #[inline(always)]
+    #[link_section = ".data"]
     pub fn write(&mut self, r: u8, g: u8, b: u8) {
         let colors = [g, r, b];
 
@@ -20,13 +21,13 @@ impl<'d> SingleWs2812<'d> {
             let mut corrupted = false;
             let start_time = unsafe { timer_raw_l.read_volatile() };
 
-            for &byte in &colors {
+            cortex_m::interrupt::free(|_| {for &byte in &colors {
                 for bit in (0..8).rev() {
                     let is_high = (byte >> bit) & 1 == 1;
 
                     if is_high {
                         self.pin.set_high();
-                        delay_cycles(74);
+                        delay_cycles(80);
 
                         self.pin.set_low();
                         delay_cycles(44);
@@ -39,6 +40,7 @@ impl<'d> SingleWs2812<'d> {
                     }
                 }
             }
+        });
 
             self.pin.set_low();
 
