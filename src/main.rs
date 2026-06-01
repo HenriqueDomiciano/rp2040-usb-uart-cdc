@@ -20,7 +20,7 @@ use crate::drivers::led::SingleWs2812;
 use crate::tasks::uart::{
     uart_bridge_task_pio_0_sm_0, uart_bridge_task_pio_0_sm_2, uart_bridge_task_pio_1_sm_0,
 };
-use crate::tasks::usb::{usb_baud_watcher_task, usb_bridge_task};
+use crate::tasks::usb::{ usb_bridge_task};
 
 use {defmt_rtt as _, panic_probe as _};
 mod bridge;
@@ -140,7 +140,7 @@ async fn main(spawner: Spawner) {
     
     spawner.spawn(tasks::usb::usb_task(usb).expect("usb_task spawn failed"));
     spawner.spawn(usb_bridge_task(class0, &BRIDGE0).unwrap());
-    spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1_rx, uart1_tx, &BRIDGE0,&mut sm0,&mut sm1).unwrap());
+    spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1_rx, uart1_tx, &BRIDGE0).unwrap());
 
     spawner.spawn(usb_bridge_task(class1, &BRIDGE1).unwrap());
     spawner.spawn(uart_bridge_task_pio_0_sm_2(uart2_rx, uart2_tx, &BRIDGE1).unwrap());

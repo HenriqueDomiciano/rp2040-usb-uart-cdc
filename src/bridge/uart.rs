@@ -13,17 +13,59 @@ use embassy_time::{Duration, Timer};
 use embedded_io_async::{Read, Write};
 use fixed::{types::extra::U8, FixedU32};
 
+use embassy_rp::pio_programs::uart::{PioUartRx, PioUartTx};
 use crate::bridge::channels::{BridgeChannels, Packet};
+pub enum UartEvent {
+    BaudChange(u32),
+}
+pub trait BaudRateControl {
+    async fn change_baud_rate(&mut self, baud: u32);
+}
 
-pub async fn uart_task<'d, PIO: Instance, const SM_RX: usize, const SM_TX: usize, R, W>(
+impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize>
+    BaudRateControl for PioUartRx<'d, PIO, SM>
+{
+    async fn change_baud_rate(&mut self, baud: u32) {
+        PioUartRx::change_baud_rate(self, baud).await;
+    }
+}
+
+impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize>
+    BaudRateControl for PioUartTx<'d, PIO, SM>
+{
+    async fn change_baud_rate(&mut self, baud: u32) {
+        PioUartTx::change_baud_rate(self, baud).await;
+    }
+}
+
+
+pub async fn uart_bridge_supervisor<'d, R, W>(
     mut rx: R,
     mut tx: W,
     channels: &'static BridgeChannels,
-    state_machine_rx: &mut StateMachine<'d, PIO, SM_RX>,
-    state_machine_tx: &mut StateMachine<'d, PIO, SM_TX>,
 ) where
-    R: Read + 'static,
-    W: Write + 'static,
+    R: Read + BaudRateControl + 'static,
+    W: Write + BaudRateControl + 'static
+{
+    loop {
+        match uart_task(&mut rx, &mut tx, channels).await {
+            UartEvent::BaudChange(baud) => {
+                rx.change_baud_rate(baud).await;
+                tx.change_baud_rate(baud).await;
+            }
+        }
+    }
+}
+
+
+pub async fn uart_task<'d, R, W>(
+    mut rx: R,
+    mut tx: W,
+    channels: &'static BridgeChannels,
+) -> UartEvent
+where
+    R: Read,
+    W: Write
 {
     let uart_rx = async {
         let mut data = [0u8; 64];
@@ -48,8 +90,7 @@ pub async fn uart_task<'d, PIO: Instance, const SM_RX: usize, const SM_TX: usize
                         n += 1;
                     }
                     Either3::Third(baud_rate) => {
-                        change_baud_rate_of_pio(state_machine_tx, baud_rate, 8);
-                        change_baud_rate_of_pio(state_machine_rx, baud_rate, 8);
+                        return UartEvent::BaudChange(baud_rate); 
                     }
                     _ => {
                         break;
@@ -75,22 +116,9 @@ pub async fn uart_task<'d, PIO: Instance, const SM_RX: usize, const SM_TX: usize
         }
     };
 
-    join(uart_rx, uart_tx).await;
+    match select(uart_rx, uart_tx).await {
+    Either::First(event) => event,
+    Either::Second(_) => unreachable!(),
+    }
 }
 
-fn change_baud_rate_of_pio<'d, PIO: Instance, const SM: usize>(
-    state_machine: &mut StateMachine<'d, PIO, SM>,
-    target_baud: u32,
-    cycles_per_bit: u32,
-) {
-    state_machine.set_enable(false);
-    state_machine.clear_fifos();
-    state_machine.restart();
-
-    let sys_clock = clk_sys_freq();
-    let pio_freq = target_baud * cycles_per_bit;
-    let div_estimated = sys_clock as f64 / pio_freq as f64;
-    let clock_divider = FixedU32::<U8>::from_num(div_estimated);
-    state_machine.set_clock_divider(clock_divider);
-    state_machine.set_enable(true);
-}

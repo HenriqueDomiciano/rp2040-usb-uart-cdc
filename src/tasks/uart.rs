@@ -5,7 +5,7 @@ use embassy_rp::peripherals::{
 };
  
 use crate::bridge::channels::BridgeChannels;
-use crate::bridge::uart::uart_task; 
+use crate::bridge::uart::{uart_bridge_supervisor, uart_task}; 
 
 #[embassy_executor::task]
 pub async fn uart_bridge_task_pio_0_sm_2(
@@ -13,7 +13,7 @@ pub async fn uart_bridge_task_pio_0_sm_2(
     tx: PioUartTx<'static, PIO0, 3>,
     channels: &'static BridgeChannels,
 ) {
-    uart_task(
+    uart_bridge_supervisor(
         rx,
         tx,
         channels
@@ -24,15 +24,11 @@ pub async fn uart_bridge_task_pio_0_sm_0(
     rx: PioUartRx<'static, PIO0, 0>,
     tx: PioUartTx<'static, PIO0, 1>,
     channels: &'static BridgeChannels,
-    mut state_machine_rx: StateMachine<'static, PIO0, 0>,
-    mut state_machine_tx:StateMachine<'static, PIO0, 1>
 ) {
-    uart_task(
+    uart_bridge_supervisor(
         rx,
         tx,
         channels,
-        &mut state_machine_rx,
-        &mut state_machine_tx
     ).await;
 }
 
@@ -42,7 +38,7 @@ pub async fn uart_bridge_task_pio_1_sm_0(
     tx: PioUartTx<'static, PIO1, 1>,
     channels: &'static BridgeChannels,
 ) {
-    uart_task(
+    uart_bridge_supervisor(
         rx,
         tx,
         channels
