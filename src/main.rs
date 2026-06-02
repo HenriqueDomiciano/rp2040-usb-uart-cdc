@@ -20,7 +20,7 @@ use crate::drivers::led::SingleWs2812;
 use crate::tasks::uart::{
     uart_bridge_task_pio_0_sm_0, uart_bridge_task_pio_0_sm_2, uart_bridge_task_pio_1_sm_0,
 };
-use crate::tasks::usb::{ usb_bridge_task};
+use crate::tasks::usb::usb_bridge_task;
 
 use {defmt_rtt as _, panic_probe as _};
 mod bridge;
@@ -55,13 +55,17 @@ async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
 
     let led_output = Output::new(p.PIN_16, Level::Low);
-    let led =SingleWs2812::new(led_output);
-    spawn_core1(p.CORE1, unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) },move || {
-        let executor1 = EXECUTOR1.init(Executor::new());
-        executor1.run(|spawner| {
-            spawner.spawn(tasks::led::ws2812_task(led).unwrap());
-        });
-    });
+    let led = SingleWs2812::new(led_output);
+    spawn_core1(
+        p.CORE1,
+        unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) },
+        move || {
+            let executor1 = EXECUTOR1.init(Executor::new());
+            executor1.run(|spawner| {
+                spawner.spawn(tasks::led::ws2812_task(led).unwrap());
+            });
+        },
+    );
     let driver = Driver::new(p.USB, Irqs);
     let config = {
         let mut config = embassy_usb::Config::new(0xc0de, 0xcafe);
@@ -84,19 +88,19 @@ async fn main(spawner: Spawner) {
         CONTROL_BUF.init([0; 64]),
     );
 
-    let mut class0 = {
+    let class0 = {
         static STATE: StaticCell<State> = StaticCell::new();
         let state = STATE.init(State::new());
         CdcAcmClass::new(&mut builder, state, 64)
     };
 
-    let mut class1 = {
+    let class1 = {
         static STATE: StaticCell<State> = StaticCell::new();
         let state = STATE.init(State::new());
         CdcAcmClass::new(&mut builder, state, 64)
     };
 
-    let mut class2 = {
+    let class2 = {
         static STATE: StaticCell<State> = StaticCell::new();
         let state = STATE.init(State::new());
         CdcAcmClass::new(&mut builder, state, 64)
@@ -106,10 +110,10 @@ async fn main(spawner: Spawner) {
 
     let Pio {
         mut common,
-        mut sm0,
-        mut sm1,
-        mut sm2,
-        mut sm3,
+        sm0,
+        sm1,
+        sm2,
+        sm3,
         ..
     } = Pio::new(p.PIO0, Irqs);
 
@@ -137,7 +141,7 @@ async fn main(spawner: Spawner) {
 
     let uart3_tx = PioUartTx::new(115_200, &mut common_pio1, sm1_pio1, p.PIN_11, &tx_prg_pio1);
     let uart3_rx = PioUartRx::new(115_200, &mut common_pio1, sm0_pio1, p.PIN_12, &rx_prg_pio1);
-    
+
     spawner.spawn(tasks::usb::usb_task(usb).expect("usb_task spawn failed"));
     spawner.spawn(usb_bridge_task(class0, &BRIDGE0).unwrap());
     spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1_rx, uart1_tx, &BRIDGE0).unwrap());

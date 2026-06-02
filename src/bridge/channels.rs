@@ -17,7 +17,7 @@ impl BridgeChannels {
         Self {
             usb_to_uart: Channel::new(),
             uart_to_usb: Channel::new(),
-            baud_rate: Channel::new()
+            baud_rate: Channel::new(),
         }
     }
 }

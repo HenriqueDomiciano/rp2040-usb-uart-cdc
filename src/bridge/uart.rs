@@ -1,71 +1,58 @@
-use core::usize;
-
-use embassy_futures::{
-    join::join,
-    select::{select, select3, Either, Either3},
-};
-use embassy_rp::{
-    clocks::clk_sys_freq,
-    pio::{Instance, StateMachine},
-    pio_programs::clock_divider,
-};
+use embassy_futures::select::{select, select3, Either, Either3};
 use embassy_time::{Duration, Timer};
 use embedded_io_async::{Read, Write};
-use fixed::{types::extra::U8, FixedU32};
 
-use embassy_rp::pio_programs::uart::{PioUartRx, PioUartTx};
 use crate::bridge::channels::{BridgeChannels, Packet};
+use embassy_rp::pio_programs::uart::{PioUartRx, PioUartTx};
 pub enum UartEvent {
     BaudChange(u32),
 }
 pub trait BaudRateControl {
-    async fn change_baud_rate(&mut self, baud: u32);
+    fn change_baud_rate(&mut self, baud: u32);
 }
 
-impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize>
-    BaudRateControl for PioUartRx<'d, PIO, SM>
+impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize> BaudRateControl
+    for PioUartRx<'d, PIO, SM>
 {
-    async fn change_baud_rate(&mut self, baud: u32) {
-        PioUartRx::change_baud_rate(self, baud).await;
+    fn change_baud_rate(&mut self, baud: u32) {
+        PioUartRx::change_baud_rate(self, baud);
     }
 }
 
-impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize>
-    BaudRateControl for PioUartTx<'d, PIO, SM>
+impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize> BaudRateControl
+    for PioUartTx<'d, PIO, SM>
 {
-    async fn change_baud_rate(&mut self, baud: u32) {
-        PioUartTx::change_baud_rate(self, baud).await;
+    fn change_baud_rate(&mut self, baud: u32) {
+        PioUartTx::change_baud_rate(self, baud);
     }
 }
 
-
-pub async fn uart_bridge_supervisor<'d, R, W>(
+pub async fn uart_bridge_supervisor<R, W>(
     mut rx: R,
     mut tx: W,
     channels: &'static BridgeChannels,
 ) where
     R: Read + BaudRateControl + 'static,
-    W: Write + BaudRateControl + 'static
+    W: Write + BaudRateControl + 'static,
 {
     loop {
         match uart_task(&mut rx, &mut tx, channels).await {
             UartEvent::BaudChange(baud) => {
-                rx.change_baud_rate(baud).await;
-                tx.change_baud_rate(baud).await;
+                rx.change_baud_rate(baud);
+                tx.change_baud_rate(baud);
             }
         }
     }
 }
 
-
-pub async fn uart_task<'d, R, W>(
+pub async fn uart_task<R, W>(
     mut rx: R,
     mut tx: W,
     channels: &'static BridgeChannels,
 ) -> UartEvent
 where
     R: Read,
-    W: Write
+    W: Write,
 {
     let uart_rx = async {
         let mut data = [0u8; 64];
@@ -90,7 +77,7 @@ where
                         n += 1;
                     }
                     Either3::Third(baud_rate) => {
-                        return UartEvent::BaudChange(baud_rate); 
+                        return UartEvent::BaudChange(baud_rate);
                     }
                     _ => {
                         break;
@@ -117,8 +104,7 @@ where
     };
 
     match select(uart_rx, uart_tx).await {
-    Either::First(event) => event,
-    Either::Second(_) => unreachable!(),
+        Either::First(event) => event,
+        Either::Second(_) => unreachable!(),
     }
 }
-

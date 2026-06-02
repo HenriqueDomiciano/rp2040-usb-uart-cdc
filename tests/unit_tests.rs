@@ -9,7 +9,6 @@ extern crate std;
 /// - Baud rate clamping and edge cases
 /// - Packet batching logic
 
-
 #[derive(Debug)]
 struct Packet {
     data: [u8; 64],
@@ -21,7 +20,10 @@ impl Packet {
         assert!(src.len() <= 64, "packet too large");
         let mut data = [0u8; 64];
         data[..src.len()].copy_from_slice(src);
-        Self { data, len: src.len() }
+        Self {
+            data,
+            len: src.len(),
+        }
     }
 
     fn as_slice(&self) -> &[u8] {
@@ -130,11 +132,7 @@ fn test_batch_stops_at_64_bytes() {
 
 #[test]
 fn test_batch_empty_packets_skipped() {
-    let packets = vec![
-        Packet::new(&[]),
-        Packet::new(b"data"),
-        Packet::new(&[]),
-    ];
+    let packets = vec![Packet::new(&[]), Packet::new(b"data"), Packet::new(&[])];
     let (result, n) = batch_packets(&packets);
     assert_eq!(n, 4);
     assert_eq!(result, b"data");

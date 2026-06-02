@@ -15,6 +15,6 @@ fn main() {
     println!("cargo:rustc-link-search={}", out.display());
 
     // Re-run only if memory.x changes
-    println!("cargo:rustc-link-arg=-Tdefmt.x");   
-    println!("cargo:rerun-if-changed=memory.x"); 
+    println!("cargo:rustc-link-arg=-Tdefmt.x");
+    println!("cargo:rerun-if-changed=memory.x");
 }

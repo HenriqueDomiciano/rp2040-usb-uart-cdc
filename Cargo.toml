@@ -19,30 +19,30 @@ panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 libm = "0.2.16"
 embedded-io-async = "0.7.0"
 
-# Embassy (local checkout)
-embassy-rp = { path = "embassy/embassy-rp", features = ["defmt", "time-driver", "critical-section-impl", "rp2040"] }
+# Embassy crates
+embassy-rp = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update", features = ["defmt", "time-driver", "critical-section-impl", "rp2040"] }
 
-embassy-executor = { path = "embassy/embassy-executor", features = [
+embassy-executor = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update", features = [
     "executor-thread",
     "platform-cortex-m",
     "defmt",
 ] }
 
-embassy-time = { path = "embassy/embassy-time", features = [
+embassy-time = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update", features = [
     "defmt",
     "defmt-timestamp-uptime",
 ] }
 
-embassy-usb = { path = "embassy/embassy-usb", features = [
+embassy-usb = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update", features = [
     "defmt",
     "max-interface-count-8",
 ] }
 
-embassy-futures = { path = "embassy/embassy-futures" }
+embassy-futures = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update" }
 
-embassy-embedded-hal = { path = "embassy/embassy-embedded-hal" }
+embassy-embedded-hal = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update" }
 
-embassy-sync = { path = "embassy/embassy-sync" }
+embassy-sync = { git = "https://github.com/HenriqueDomiciano/embassy", branch = "feat/add-pio-baud-rate-update" }
 
 [package.metadata.embassy_rp]
 task_arena_size = 65536
