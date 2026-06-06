@@ -7,9 +7,59 @@ use crate::bridge::channels::BridgeChannels;
 
 type MyUsbDriver = Driver<'static, USB>;
 type MyUsbDevice = UsbDevice<'static, MyUsbDriver>;
+use embassy_usb::Handler; 
+use embassy_usb::control::{InResponse, OutResponse, Request};
 
+pub struct TripleCdcControlHandler {
+    bridge0: &'static BridgeChannels,
+    bridge1: &'static BridgeChannels,
+    bridge2: &'static BridgeChannels,
+}
+
+impl TripleCdcControlHandler {
+    pub fn new(
+        bridge0: &'static BridgeChannels,
+        bridge1: &'static BridgeChannels,
+        bridge2: &'static BridgeChannels,
+    ) -> Self {
+        Self { bridge0, bridge1, bridge2 }
+    }
+}
+
+impl Handler for TripleCdcControlHandler {
+    fn control_out(&mut self, req: Request, data: &[u8]) -> Option<OutResponse> {
+        // 0x20 = SET_LINE_CODING
+        if req.request == 0x20 && data.len() >= 4 {
+            let new_baud = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+            
+            match req.index {
+                0 => {
+                    defmt::info!("USB Porta 0 -> Novo Baud: {}", new_baud);
+                    let _ = self.bridge0.baud_rate.try_send(new_baud);
+                }
+                2 => {
+                    defmt::info!("USB Porta 1 -> Novo Baud: {}", new_baud);
+                    let _ = self.bridge1.baud_rate.try_send(new_baud);
+                }
+                4 => {
+                    defmt::info!("USB Porta 2 -> Novo Baud: {}", new_baud);
+                    let _ = self.bridge2.baud_rate.try_send(new_baud);
+                }
+                _ => {
+                    defmt::debug!("SET_LINE_CODING recebido na interface inesperada: {}", req.index);
+                }
+            }
+        }
+        Some(OutResponse::Accepted)
+    }
+
+    fn control_in<'a>(&'a mut self, _req: Request, _buf: &'a mut [u8]) -> Option<InResponse<'a>> {
+        None
+    }
+}
 #[embassy_executor::task]
 pub async fn usb_task(mut usb: MyUsbDevice) -> ! {
+    defmt::info!("USB Started");
     usb.run().await
 }
 
@@ -30,21 +80,16 @@ pub async fn usb_bridge_task(
     cdc: CdcAcmClass<'static, Driver<'static, USB>>,
     channels: &'static BridgeChannels,
 ) {
+    defmt::info!("USB CDC Started");
     let (mut tx_cdc, mut rx_cdc) = cdc.split();
-    let mut last_baud = 115200;
+    let disconnect_signal: Signal<CriticalSectionRawMutex, ()> = Signal::new();
     loop {
+        defmt::info!("USB waiting connection");
         // Wait for both sides to be connected
         rx_cdc.wait_connection().await;
         tx_cdc.wait_connection().await;
         defmt::info!("USB connected");
-        let disconnect_signal: Signal<CriticalSectionRawMutex, ()> = Signal::new();
-        let current_line_coding = tx_cdc.line_coding();
-        let new_baud = current_line_coding.data_rate();
 
-        if new_baud != last_baud {
-            channels.baud_rate.send(new_baud).await;
-            last_baud = new_baud;
-        }
         let usb_rx = async {
             let mut buf = [0u8; 64];
             loop {

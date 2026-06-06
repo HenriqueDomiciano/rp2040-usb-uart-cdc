@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
+use defmt::info;
 use embassy_executor::{Executor, Spawner};
+use {defmt_rtt as _, panic_probe as _};
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::multicore::{spawn_core1, Stack};
 use embassy_rp::peripherals::DMA_CH1;
@@ -16,7 +18,7 @@ use embassy_rp::{
 use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use static_cell::StaticCell;
 
-use crate::drivers::led::SingleWs2812;
+use crate::{drivers::led::SingleWs2812, tasks::usb::TripleCdcControlHandler};
 use crate::tasks::uart::{
     uart_bridge_task_pio_0_sm_0, uart_bridge_task_pio_0_sm_2, uart_bridge_task_pio_1_sm_0,
 };
@@ -53,6 +55,7 @@ bind_interrupts!(struct Irqs {
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
+    info!("Started");
 
     let led_output = Output::new(p.PIN_16, Level::Low);
     let led = SingleWs2812::new(led_output);
@@ -79,6 +82,12 @@ async fn main(spawner: Spawner) {
     static CONFIG_DESCRIPTOR: StaticCell<[u8; 1024]> = StaticCell::new();
     static BOS_DESCRIPTOR: StaticCell<[u8; 512]> = StaticCell::new();
     static CONTROL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
+    static TRIPLE_HANDLER: StaticCell<TripleCdcControlHandler> = StaticCell::new();
+    let triple_handler = TRIPLE_HANDLER.init(TripleCdcControlHandler::new(
+        &BRIDGE0,
+        &BRIDGE1,
+        &BRIDGE2,
+    ));
     let mut builder = embassy_usb::Builder::new(
         driver,
         config,
@@ -87,6 +96,7 @@ async fn main(spawner: Spawner) {
         &mut [],
         CONTROL_BUF.init([0; 64]),
     );
+    builder.handler(triple_handler);
 
     let class0 = {
         static STATE: StaticCell<State> = StaticCell::new();
@@ -141,14 +151,15 @@ async fn main(spawner: Spawner) {
 
     let uart3_tx = PioUartTx::new(115_200, &mut common_pio1, sm1_pio1, p.PIN_11, &tx_prg_pio1);
     let uart3_rx = PioUartRx::new(115_200, &mut common_pio1, sm0_pio1, p.PIN_12, &rx_prg_pio1);
-
+    info!("Started USB task!!!"); 
     spawner.spawn(tasks::usb::usb_task(usb).expect("usb_task spawn failed"));
+    info!("Started USB bridge 0");
     spawner.spawn(usb_bridge_task(class0, &BRIDGE0).unwrap());
     spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1_rx, uart1_tx, &BRIDGE0).unwrap());
-
+    info!("Started USB bridge 1");
     spawner.spawn(usb_bridge_task(class1, &BRIDGE1).unwrap());
     spawner.spawn(uart_bridge_task_pio_0_sm_2(uart2_rx, uart2_tx, &BRIDGE1).unwrap());
-
+    info!("Started USB bridge 2");
     spawner.spawn(usb_bridge_task(class2, &BRIDGE2).unwrap());
     spawner.spawn(uart_bridge_task_pio_1_sm_0(uart3_rx, uart3_tx, &BRIDGE2).unwrap());
     loop {
