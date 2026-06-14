@@ -94,9 +94,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.12.1"
+version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84d7ced0ae9557296835c32bf1b1e02b44c746701f898460fb000d7eaa84f00a"
+checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
 name = "block-buffer"
@@ -121,9 +121,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cc"
-version = "1.2.63"
+version = "1.2.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "556e016178bb5662a08681bbe0f00f8e17631781a4dfc8c45e466e4b185ec27f"
+checksum = "dad887fd958be91b5098c0248def011f4523ab786cd411be668777e55063501f"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -137,9 +137,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "chrono"
-version = "0.4.44"
+version = "0.4.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c673075a2e0e5f4a1dde27ce9dee1ea4558c7ffe648f576438a20ca1d2acc4b0"
+checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "defmt 1.1.0",
  "num-traits",
@@ -358,7 +358,7 @@ checksum = "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e"
 [[package]]
 name = "embassy-embedded-hal"
 version = "0.6.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "embassy-futures",
  "embassy-hal-internal",
@@ -374,7 +374,7 @@ dependencies = [
 [[package]]
 name = "embassy-executor"
 version = "0.10.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "cordyceps",
  "cortex-m",
@@ -388,7 +388,7 @@ dependencies = [
 [[package]]
 name = "embassy-executor-macros"
 version = "0.8.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -399,17 +399,17 @@ dependencies = [
 [[package]]
 name = "embassy-executor-timer-queue"
 version = "0.1.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 
 [[package]]
 name = "embassy-futures"
 version = "0.1.2"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 
 [[package]]
 name = "embassy-hal-internal"
 version = "0.5.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "cortex-m",
  "critical-section",
@@ -420,12 +420,12 @@ dependencies = [
 [[package]]
 name = "embassy-net-driver"
 version = "0.2.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 
 [[package]]
 name = "embassy-net-driver-channel"
 version = "0.4.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "embassy-futures",
  "embassy-net-driver",
@@ -435,7 +435,7 @@ dependencies = [
 [[package]]
 name = "embassy-rp"
 version = "0.10.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "cfg-if",
  "chrono",
@@ -475,7 +475,7 @@ dependencies = [
 [[package]]
 name = "embassy-sync"
 version = "0.8.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -488,7 +488,7 @@ dependencies = [
 [[package]]
 name = "embassy-time"
 version = "0.5.1"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -504,7 +504,7 @@ dependencies = [
 [[package]]
 name = "embassy-time-driver"
 version = "0.2.2"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "document-features",
 ]
@@ -512,7 +512,7 @@ dependencies = [
 [[package]]
 name = "embassy-time-queue-utils"
 version = "0.3.2"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "embassy-executor-timer-queue",
  "heapless 0.9.3",
@@ -521,9 +521,9 @@ dependencies = [
 [[package]]
 name = "embassy-usb"
 version = "0.6.0"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
- "bitflags 2.12.1",
+ "bitflags 2.13.0",
  "defmt 1.1.0",
  "embassy-futures",
  "embassy-net-driver-channel",
@@ -539,7 +539,7 @@ dependencies = [
 [[package]]
 name = "embassy-usb-driver"
 version = "0.2.2"
-source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#5786c15e86dad785304ebc9d0052a4a659d89aaf"
+source = "git+https://github.com/HenriqueDomiciano/embassy?branch=feat%2Fadd-pio-baud-rate-update#51d8b76ffa9c5a2d26999fba12713097b448b1b3"
 dependencies = [
  "defmt 1.1.0",
  "embedded-io-async 0.6.1",
@@ -905,9 +905,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.31"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "113b30b4cd05f7c06868fdb2854f66a7b9fece9a48425351cd532e810d74024f"
+checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 
 [[package]]
 name = "loom"
@@ -933,9 +933,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.8.1"
+version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
+checksum = "88904434abc2901f197fe8cc55f0445e7ded921dba5911dad2e2b39b48e663c4"
 
 [[package]]
 name = "nb"
@@ -1233,14 +1233,14 @@ version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
 dependencies = [
- "bitflags 2.12.1",
+ "bitflags 2.13.0",
 ]
 
 [[package]]
 name = "regex"
-version = "1.12.3"
+version = "1.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
+checksum = "f1292b7759ae1cb9ec195452d1390a074f0cd8541ab7a5a8c31cd6db45d4a6ba"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1261,9 +1261,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.10"
+version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
+checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rgb"
@@ -1433,9 +1433,9 @@ checksum = "8ee5873ec9cce0195efcb7a4e9507a04cd49aec9c83d0389df45b1ef7ba2e649"
 
 [[package]]
 name = "smallvec"
-version = "1.15.1"
+version = "1.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
 name = "smart-leds"
@@ -1775,18 +1775,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.50"
+version = "0.8.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b065d4f0e55f82fae73202e189638116a87c55ab6b8e6c2721e13dd9d854ad1"
+checksum = "ce1022995ff5ff5d841ad7d994facc23098cd40152f2c1d11cd607c6f530653f"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.50"
+version = "0.8.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b631b19d36a892ab55420c92dbc83ccd79274f25be714855d3074aa71cab639"
+checksum = "1ae7f38b72ec2a254e2b87ef277cf2cd4fb97cbebf944faa6f33354da0867930"
 dependencies = [
  "proc-macro2",
  "quote",

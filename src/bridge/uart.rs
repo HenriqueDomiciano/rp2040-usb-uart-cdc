@@ -16,7 +16,7 @@ impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize> BaudRateControl
     for PioUartRx<'d, PIO, SM>
 {
     fn change_baud_rate(&mut self, baud: u32) {
-        PioUartRx::change_baud_rate(self, baud);
+        PioUartRx::set_baudrate(self, baud);
     }
 }
 
@@ -24,7 +24,7 @@ impl<'d, PIO: embassy_rp::pio::Instance, const SM: usize> BaudRateControl
     for PioUartTx<'d, PIO, SM>
 {
     fn change_baud_rate(&mut self, baud: u32) {
-        PioUartTx::change_baud_rate(self, baud);
+        PioUartTx::set_baudrate(self, baud);
     }
 }
 
