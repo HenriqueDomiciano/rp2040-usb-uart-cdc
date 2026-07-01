@@ -5,10 +5,8 @@ use embassy_usb::{class::cdc_acm::CdcAcmClass, driver::EndpointError, UsbDevice}
 
 use crate::bridge::channels::BridgeChannels;
 
-type MyUsbDriver = Driver<'static, USB>;
-type MyUsbDevice = UsbDevice<'static, MyUsbDriver>;
-use embassy_usb::Handler; 
 use embassy_usb::control::{InResponse, OutResponse, Request};
+use embassy_usb::Handler;
 
 pub struct TripleCdcControlHandler {
     bridge0: &'static BridgeChannels,
@@ -22,16 +20,19 @@ impl TripleCdcControlHandler {
         bridge1: &'static BridgeChannels,
         bridge2: &'static BridgeChannels,
     ) -> Self {
-        Self { bridge0, bridge1, bridge2 }
+        Self {
+            bridge0,
+            bridge1,
+            bridge2,
+        }
     }
 }
 
 impl Handler for TripleCdcControlHandler {
     fn control_out(&mut self, req: Request, data: &[u8]) -> Option<OutResponse> {
-        // 0x20 = SET_LINE_CODING
         if req.request == 0x20 && data.len() >= 4 {
             let new_baud = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
-            
+
             match req.index {
                 0 => {
                     defmt::info!("USB Porta 0 -> Novo Baud: {}", new_baud);
@@ -46,7 +47,10 @@ impl Handler for TripleCdcControlHandler {
                     let _ = self.bridge2.baud_rate.try_send(new_baud);
                 }
                 _ => {
-                    defmt::debug!("SET_LINE_CODING recebido na interface inesperada: {}", req.index);
+                    defmt::debug!(
+                        "SET_LINE_CODING recebido na interface inesperada: {}",
+                        req.index
+                    );
                 }
             }
         }
@@ -58,7 +62,7 @@ impl Handler for TripleCdcControlHandler {
     }
 }
 #[embassy_executor::task]
-pub async fn usb_task(mut usb: MyUsbDevice) -> ! {
+pub async fn usb_task(mut usb: UsbDevice<'static,Driver<'static, USB>>) -> ! {
     defmt::info!("USB Started");
     usb.run().await
 }

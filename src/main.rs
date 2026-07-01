@@ -1,8 +1,12 @@
 #![no_std]
 #![no_main]
-use defmt::info;
+
+mod bridge;
+mod drivers;
+mod tasks;
+mod macros;
+
 use embassy_executor::{Executor, Spawner};
-use {defmt_rtt as _, panic_probe as _};
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::multicore::{spawn_core1, Stack};
 use embassy_rp::peripherals::DMA_CH1;
@@ -11,24 +15,20 @@ use embassy_rp::{
     bind_interrupts,
     peripherals::{PIO0, PIO1, UART0, USB},
     pio::{InterruptHandler, Pio},
-    pio_programs::uart::{PioUartRx, PioUartRxProgram, PioUartTx, PioUartTxProgram},
-    uart::{BufferedInterruptHandler, Config},
-    usb::Driver,
+    uart::BufferedInterruptHandler,
 };
-use embassy_usb::class::cdc_acm::{CdcAcmClass, State};
 use static_cell::StaticCell;
 
-use crate::{drivers::led::SingleWs2812, tasks::usb::TripleCdcControlHandler};
+use crate::bridge::channels::BridgeChannels;
+use crate::drivers::led::SingleWs2812;
+use crate::drivers::uart::PioUart;
+use crate::drivers::usb::UsbStack;
+use crate::macros::spawn_bridge;
 use crate::tasks::uart::{
     uart_bridge_task_pio_0_sm_0, uart_bridge_task_pio_0_sm_2, uart_bridge_task_pio_1_sm_0,
 };
-use crate::tasks::usb::usb_bridge_task;
 
 use {defmt_rtt as _, panic_probe as _};
-mod bridge;
-mod drivers;
-mod tasks;
-use bridge::channels::BridgeChannels;
 
 static mut CORE1_STACK: Stack<4096> = Stack::new();
 static EXECUTOR1: StaticCell<Executor> = StaticCell::new();
@@ -55,7 +55,7 @@ bind_interrupts!(struct Irqs {
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
-    info!("Started");
+    defmt::info!("Started");
 
     let led_output = Output::new(p.PIN_16, Level::Low);
     let led = SingleWs2812::new(led_output);
@@ -69,54 +69,8 @@ async fn main(spawner: Spawner) {
             });
         },
     );
-    let driver = Driver::new(p.USB, Irqs);
-    let config = {
-        let mut config = embassy_usb::Config::new(0xc0de, 0xcafe);
-        config.manufacturer = Some("Henrique Domiciano");
-        config.product = Some("USB-Serial-to-UART");
-        config.serial_number = Some("12345678");
-        config.max_power = 100;
-        config.max_packet_size_0 = 64;
-        config
-    };
-    static CONFIG_DESCRIPTOR: StaticCell<[u8; 1024]> = StaticCell::new();
-    static BOS_DESCRIPTOR: StaticCell<[u8; 512]> = StaticCell::new();
-    static CONTROL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
-    static TRIPLE_HANDLER: StaticCell<TripleCdcControlHandler> = StaticCell::new();
-    let triple_handler = TRIPLE_HANDLER.init(TripleCdcControlHandler::new(
-        &BRIDGE0,
-        &BRIDGE1,
-        &BRIDGE2,
-    ));
-    let mut builder = embassy_usb::Builder::new(
-        driver,
-        config,
-        CONFIG_DESCRIPTOR.init([0; 1024]),
-        BOS_DESCRIPTOR.init([0; 512]),
-        &mut [],
-        CONTROL_BUF.init([0; 64]),
-    );
-    builder.handler(triple_handler);
 
-    let class0 = {
-        static STATE: StaticCell<State> = StaticCell::new();
-        let state = STATE.init(State::new());
-        CdcAcmClass::new(&mut builder, state, 64)
-    };
-
-    let class1 = {
-        static STATE: StaticCell<State> = StaticCell::new();
-        let state = STATE.init(State::new());
-        CdcAcmClass::new(&mut builder, state, 64)
-    };
-
-    let class2 = {
-        static STATE: StaticCell<State> = StaticCell::new();
-        let state = STATE.init(State::new());
-        CdcAcmClass::new(&mut builder, state, 64)
-    };
-    let usb = builder.build();
-    let _default_uart_config = Config::default();
+    let usb_controllers = UsbStack::new(p.USB, Irqs);
 
     let Pio {
         mut common,
@@ -138,30 +92,46 @@ async fn main(spawner: Spawner) {
     enable_pullup(27);
     enable_pullup(28);
     enable_pullup(12);
-    let tx_prg = PioUartTxProgram::new(&mut common);
-    let rx_prg = PioUartRxProgram::new(&mut common);
-    let tx_prg_pio1 = PioUartTxProgram::new(&mut common_pio1);
-    let rx_prg_pio1 = PioUartRxProgram::new(&mut common_pio1);
+    let uart1 = PioUart::new(115_200, &mut common, sm0, sm1, p.PIN_27, p.PIN_2);
+    let uart2 = PioUart::new(115_200, &mut common, sm2, sm3, p.PIN_28, p.PIN_1);
+    let uart3 = PioUart::new(
+        115_200,
+        &mut common_pio1,
+        sm0_pio1,
+        sm1_pio1,
+        p.PIN_11,
+        p.PIN_12,
+    );
 
-    let uart1_tx = PioUartTx::new(115_200, &mut common, sm1, p.PIN_2, &tx_prg);
-    let uart1_rx = PioUartRx::new(115_200, &mut common, sm0, p.PIN_27, &rx_prg);
+    spawn_bridge!(
+        spawner,
+        0,
+        &BRIDGE0,
+        usb_controllers.class0,
+        uart_bridge_task_pio_0_sm_0,
+        uart1.rx,
+        uart1.tx
+    );
 
-    let uart2_tx = PioUartTx::new(115_200, &mut common, sm3, p.PIN_1, &tx_prg);
-    let uart2_rx = PioUartRx::new(115_200, &mut common, sm2, p.PIN_28, &rx_prg);
+    spawn_bridge!(
+        spawner,
+        1,
+        &BRIDGE1,
+        usb_controllers.class1,
+        uart_bridge_task_pio_0_sm_2,
+        uart2.rx,
+        uart2.tx
+    );
 
-    let uart3_tx = PioUartTx::new(115_200, &mut common_pio1, sm1_pio1, p.PIN_11, &tx_prg_pio1);
-    let uart3_rx = PioUartRx::new(115_200, &mut common_pio1, sm0_pio1, p.PIN_12, &rx_prg_pio1);
-    info!("Started USB task!!!"); 
-    spawner.spawn(tasks::usb::usb_task(usb).expect("usb_task spawn failed"));
-    info!("Started USB bridge 0");
-    spawner.spawn(usb_bridge_task(class0, &BRIDGE0).unwrap());
-    spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1_rx, uart1_tx, &BRIDGE0).unwrap());
-    info!("Started USB bridge 1");
-    spawner.spawn(usb_bridge_task(class1, &BRIDGE1).unwrap());
-    spawner.spawn(uart_bridge_task_pio_0_sm_2(uart2_rx, uart2_tx, &BRIDGE1).unwrap());
-    info!("Started USB bridge 2");
-    spawner.spawn(usb_bridge_task(class2, &BRIDGE2).unwrap());
-    spawner.spawn(uart_bridge_task_pio_1_sm_0(uart3_rx, uart3_tx, &BRIDGE2).unwrap());
+    spawn_bridge!(
+        spawner,
+        2,
+        &BRIDGE2,
+        usb_controllers.class2,
+        uart_bridge_task_pio_1_sm_0,
+        uart3.rx,
+        uart3.tx
+    );
     loop {
         embassy_time::Timer::after_secs(1).await;
     }

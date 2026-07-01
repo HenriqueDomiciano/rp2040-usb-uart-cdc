@@ -1,5 +1,5 @@
 [package]
-name = "rp2040-project"
+name = "rp2040-usb-cdc"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
