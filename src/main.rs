@@ -4,8 +4,8 @@
 mod bridge;
 mod drivers;
 mod tasks;
-mod macros;
 
+use defmt::info;
 use embassy_executor::{Executor, Spawner};
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::multicore::{spawn_core1, Stack};
@@ -23,10 +23,10 @@ use crate::bridge::channels::BridgeChannels;
 use crate::drivers::led::SingleWs2812;
 use crate::drivers::uart::PioUart;
 use crate::drivers::usb::UsbStack;
-use crate::macros::spawn_bridge;
 use crate::tasks::uart::{
     uart_bridge_task_pio_0_sm_0, uart_bridge_task_pio_0_sm_2, uart_bridge_task_pio_1_sm_0,
 };
+use crate::tasks::usb::usb_bridge_task;
 
 use {defmt_rtt as _, panic_probe as _};
 
@@ -103,35 +103,17 @@ async fn main(spawner: Spawner) {
         p.PIN_12,
     );
 
-    spawn_bridge!(
-        spawner,
-        0,
-        &BRIDGE0,
-        usb_controllers.class0,
-        uart_bridge_task_pio_0_sm_0,
-        uart1.rx,
-        uart1.tx
-    );
-
-    spawn_bridge!(
-        spawner,
-        1,
-        &BRIDGE1,
-        usb_controllers.class1,
-        uart_bridge_task_pio_0_sm_2,
-        uart2.rx,
-        uart2.tx
-    );
-
-    spawn_bridge!(
-        spawner,
-        2,
-        &BRIDGE2,
-        usb_controllers.class2,
-        uart_bridge_task_pio_1_sm_0,
-        uart3.rx,
-        uart3.tx
-    );
+    info!("Started USB task!!!");
+    spawner.spawn(tasks::usb::usb_task(usb_controllers.usb).expect("usb_task spawn failed"));
+    info!("Started USB bridge 0");
+    spawner.spawn(usb_bridge_task(usb_controllers.class0, &BRIDGE0).unwrap());
+    spawner.spawn(uart_bridge_task_pio_0_sm_0(uart1.rx, uart1.tx, &BRIDGE0).unwrap());
+    info!("Started USB bridge 1");
+    spawner.spawn(usb_bridge_task(usb_controllers.class1, &BRIDGE1).unwrap());
+    spawner.spawn(uart_bridge_task_pio_0_sm_2(uart2.rx, uart2.tx, &BRIDGE1).unwrap());
+    info!("Started USB bridge 2");
+    spawner.spawn(usb_bridge_task(usb_controllers.class2, &BRIDGE2).unwrap());
+    spawner.spawn(uart_bridge_task_pio_1_sm_0(uart3.rx, uart3.tx, &BRIDGE2).unwrap());
     loop {
         embassy_time::Timer::after_secs(1).await;
     }

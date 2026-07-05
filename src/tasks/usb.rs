@@ -62,7 +62,7 @@ impl Handler for TripleCdcControlHandler {
     }
 }
 #[embassy_executor::task]
-pub async fn usb_task(mut usb: UsbDevice<'static,Driver<'static, USB>>) -> ! {
+pub async fn usb_task(mut usb: UsbDevice<'static, Driver<'static, USB>>) -> ! {
     defmt::info!("USB Started");
     usb.run().await
 }
