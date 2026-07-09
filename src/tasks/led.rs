@@ -1,6 +1,8 @@
 use core::f32;
 
-use embassy_time::{Duration, Ticker};
+use defmt::info;
+use embassy_rp::gpio::Output;
+use embassy_time::{Duration, Ticker, Timer};
 
 use crate::drivers::led::SingleWs2812;
 use libm::pow;
@@ -14,6 +16,7 @@ fn breathe(t: f32) -> u8 {
 
 #[embassy_executor::task]
 pub async fn ws2812_task(mut ws2812: SingleWs2812<'static>) {
+    info!("Starting LED breathing task");
     let mut ticker = Ticker::every(Duration::from_millis(30));
     let mut time: f32 = 0.0;
     loop {
@@ -25,5 +28,17 @@ pub async fn ws2812_task(mut ws2812: SingleWs2812<'static>) {
             time = 0.0;
         }
         ticker.next().await;
+    }
+}
+
+#[embassy_executor::task]
+pub async fn blink_led(mut pin: Output<'static>) {
+    const LED_BLINK_TIME: u64 = 500;
+    info!("Starting LED blink task");
+    loop {
+        pin.set_high();
+        Timer::after(Duration::from_millis(LED_BLINK_TIME)).await;
+        pin.set_low();
+        Timer::after(Duration::from_millis(LED_BLINK_TIME)).await;
     }
 }

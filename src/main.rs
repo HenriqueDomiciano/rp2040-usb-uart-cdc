@@ -56,19 +56,28 @@ bind_interrupts!(struct Irqs {
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     defmt::info!("Started");
-
-    let led_output = Output::new(p.PIN_16, Level::Low);
-    let led = SingleWs2812::new(led_output);
-    spawn_core1(
-        p.CORE1,
-        unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) },
-        move || {
-            let executor1 = EXECUTOR1.init(Executor::new());
-            executor1.run(|spawner| {
-                spawner.spawn(tasks::led::ws2812_task(led).unwrap());
-            });
-        },
-    );
+    #[cfg(feature = "rp-2040-zero")]
+    {
+        use crate::tasks::led::ws2812_task;
+        let led_output = Output::new(p.PIN_16, Level::Low);
+        let led = SingleWs2812::new(led_output);
+        spawn_core1(
+            p.CORE1,
+            unsafe { &mut *core::ptr::addr_of_mut!(CORE1_STACK) },
+            move || {
+                let executor1 = EXECUTOR1.init(Executor::new());
+                executor1.run(|spawner| {
+                    spawner.spawn(ws2812_task(led).unwrap());
+                });
+            },
+        );
+    }
+    #[cfg(feature = "rp-2040-board-dev")]
+    {
+        use crate::tasks::led::blink_led;
+        let led_output = Output::new(p.PIN_25, Level::Low);
+        spawner.spawn(blink_led(led_output).unwrap());
+    }
 
     let usb_controllers = UsbStack::new(p.USB, Irqs);
 

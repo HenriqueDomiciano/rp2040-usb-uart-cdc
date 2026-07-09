@@ -22,27 +22,37 @@ jobs:
           targets: thumbv6m-none-eabi
 
       - name: Install system dependencies
-        run: sudo apt update ; sudo apt upgrade ; sudo apt-get install -y libudev-dev
-      
-      - name: Install flip-link
-        run: cargo install flip-link
+        run: |
+          sudo apt update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install tools (flip-link & elf2uf2-rs)
+        run: |
+          cargo install flip-link
+          cargo install elf2uf2-rs
 
       - name: Run unit tests before release
         run: |
           rustc --edition 2021 tests/unit_tests.rs --test -o /tmp/unit_tests
           /tmp/unit_tests
 
-      - name: Build release firmware
+      - name: Build release firmware RP2040-zero
         run: cargo build --release
 
-      - name: Install elf2uf2-rs
-        run: cargo install elf2uf2-rs
-
-      - name: Convert ELF to UF2
+      - name: Convert ZERO ELF to UF2
         run: |
           elf2uf2-rs \
             target/thumbv6m-none-eabi/release/rp2040-project \
-            rp2040-project-${{ github.ref_name }}.uf2
+            rp2040-project-zero-${{ github.ref_name }}.uf2
+
+      - name: Build release firmware RP2040-dev
+        run: cargo build --release --no-default-features --features rp-2040-board-dev
+
+      - name: Convert DEV ELF to UF2
+        run: |
+          elf2uf2-rs \
+            target/thumbv6m-none-eabi/release/rp2040-project \
+            rp2040-project-dev-${{ github.ref_name }}.uf2
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -53,10 +63,14 @@ jobs:
 
             ### Installation
             1. Hold **BOOTSEL** while plugging in USB
-            2. Drag and drop `rp2040-project-${{ github.ref_name }}.uf2` onto the `RPI-RP2` drive
+            2. Drag and drop the correct `.uf2` file for your board onto the `RPI-RP2` drive:
+               - For RP2040 Zero: `rp2040-project-zero-${{ github.ref_name }}.uf2`
+               - For Dev Board: `rp2040-project-dev-${{ github.ref_name }}.uf2`
 
             ### Changes
             See [CHANGELOG](CHANGELOG.md) for details.
-          files: rp2040-project-${{ github.ref_name }}.uf2
+          files: |
+            rp2040-project-zero-${{ github.ref_name }}.uf2
+            rp2040-project-dev-${{ github.ref_name }}.uf2
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}

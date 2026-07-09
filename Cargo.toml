@@ -52,3 +52,9 @@ embassy-sync = { git = "https://github.com/HenriqueDomiciano/embassy", branch = 
 
 [package.metadata.embassy_rp]
 task_arena_size = 65536
+
+[features]
+default = ["rp-2040-zero"]
+
+rp-2040-zero = []
+rp-2040-board-dev = []

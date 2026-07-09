@@ -1,6 +1,14 @@
 # RP2040 USB-UART Bridge
 
-A 3-port USB CDC to UART bridge running on the **RP2040 Super Mini** board, built with [Embassy](https://embassy.dev/) async embedded Rust.
+## Objective 
+
+The Objective of this project is to replace cheap or expensive USB to UART converters like CP2102 or FTDI232
+with just on USB connection, avoiding excessive use o wires and other peripherals, given the small amount of 
+USB ports on newer laptops.  
+
+## Overview
+
+A 3-port USB CDC to UART bridge running on the **RP2040 zero** board or cheap default **RP2040 development boards**, built with [Embassy](https://embassy.dev/) async embedded Rust.
 
 Exposes **3 independent serial ports** over a single USB connection, each bridged to a dedicated UART. Features a breathing WS2812 RGB LED running on core 1, isolated from the UART workload on core 0.
 
@@ -12,9 +20,9 @@ Exposes **3 independent serial ports** over a single USB connection, each bridge
 - 3x PIO-based software UARTs with 115200 baud
 - Packet-batched bridging for efficient USB throughput
 - USB disconnect/reconnect handling with channel flush
-- WS2812 RGB LED breathing animation on core 1 (isolated from UART interrupts)
+- WS2812 RGB LED breathing animation on core 1 (isolated from UART interrupts) 
 - Bit-banged WS2812 driver with timing corruption detection and retry
-
+- Full support for RP2040 zero board and default rp2040 dev board
 ---
 
 ## Hardware
@@ -22,9 +30,19 @@ Exposes **3 independent serial ports** over a single USB connection, each bridge
 | Component | Details |
 |-----------|---------|
 | MCU | RP2040 (dual-core Cortex-M0+) |
-| Board | RP2040 Super Mini |
+| Board | RP2040 zero |
 | LED | WS2812B on GPIO16 |
 | USB | Full-speed USB 2.0 (native RP2040 USB) |
+
+Or also the common dev board. 
+
+| Component | Details |
+|-----------|---------|
+| MCU | RP2040 (dual-core Cortex-M0+) |
+| Board | RP2040 zero |
+| LED | Blink (Keep Alive) on GPIO25 |
+| USB | Full-speed USB 2.0 (native RP2040 USB) |
+
 
 ### UART Pin Mapping
 
@@ -90,6 +108,8 @@ src/
 ├── drivers/
 │   ├── mod.rs
 │   └── led.rs           # Bit-banged WS2812 driver with timing retry
+│   └── uart.rs          # The UART creation abstraction for the PIO UART RX and TX
+│   └── usb.rs           # The USB creation abstraction
 └── tasks/
     ├── mod.rs
     ├── led.rs           # WS2812 breathing animation task (core 1)
@@ -125,10 +145,14 @@ cargo build --release
 ### Flash
 
 With a debug probe (SWD):
+In case you are using and rp2040-zero board
 ```bash
 cargo run --release
 ```
-
+In case you are using an default rp2040 board
+```bash
+cargo run --release --no-default-features --features rp-2040-board-dev
+```
 Via UF2 (hold BOOTSEL while plugging in USB):
 ```bash
 cargo build --release
