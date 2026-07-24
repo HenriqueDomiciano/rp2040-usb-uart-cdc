@@ -47,7 +47,8 @@ jobs:
 
       - name: Install elf2uf2-rs
         run: cargo install elf2uf2-rs
-
+      - name: Help
+        run: ls -a ; ls target/ ; ls target/thumbv6m-none-eabi/release ;
       - name: Convert ELF to UF2
         run: |
           elf2uf2-rs \
