@@ -43,7 +43,7 @@ jobs:
         run: |
           elf2uf2-rs \
             target/thumbv6m-none-eabi/release/rp2040-usb-cdc \
-            rp2040-project-zero-${{ github.ref_name }}.uf2
+            rp2040-usb-cdc-zero-${{ github.ref_name }}.uf2
 
       - name: Build release firmware RP2040-dev
         run: cargo build --release --no-default-features --features rp-2040-board-dev
@@ -52,7 +52,7 @@ jobs:
         run: |
           elf2uf2-rs \
             target/thumbv6m-none-eabi/release/rp2040-usb-cdc \
-            rp2040-project-dev-${{ github.ref_name }}.uf2
+            rp2040-usb-cdc-dev-${{ github.ref_name }}.uf2
 
       # --- 3. CREATE GITHUB RELEASE ---
       - name: Create GitHub Release
@@ -65,13 +65,11 @@ jobs:
             ### Installation
             1. Hold **BOOTSEL** while plugging in USB
             2. Drag and drop the correct `.uf2` file for your board onto the `RPI-RP2` drive:
-               - For RP2040 Zero: `rp2040-project-zero-${{ github.ref_name }}.uf2`
-               - For Dev Board: `rp2040-project-dev-${{ github.ref_name }}.uf2`
+               - For RP2040 Zero: `rp2040-usb-cdc-zero-${{ github.ref_name }}.uf2`
+               - For Dev Board: `rp2040-usb-cdc-dev-${{ github.ref_name }}.uf2`
 
-            ### Changes
-            See [CHANGELOG](CHANGELOG.md) for details.
           files: |
-            rp2040-project-zero-${{ github.ref_name }}.uf2
-            rp2040-project-dev-${{ github.ref_name }}.uf2
+            rp2040-usb-cdc-zero-${{ github.ref_name }}.uf2
+            rp2040-usb-cdc-dev-${{ github.ref_name }}.uf2
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
