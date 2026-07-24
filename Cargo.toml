@@ -6,8 +6,8 @@ build = "build.rs"
 
 
 [profile.release]
-debug = 2       # Mantém símbolos de debug mesmo na build otimizada
-opt-level = 1 # Otimiza fortemente para tamanho de binário
+debug = 2    
+opt-level = 3  
 lto = false   
 
 [dependencies]

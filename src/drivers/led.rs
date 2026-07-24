@@ -10,7 +10,6 @@ impl<'d> SingleWs2812<'d> {
         Self { pin }
     }
     #[inline(always)]
-    #[link_section = ".data"]
     pub fn write(&mut self, r: u8, g: u8, b: u8) {
         let colors = [g, r, b];
 
