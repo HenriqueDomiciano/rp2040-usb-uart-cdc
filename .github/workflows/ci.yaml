@@ -47,12 +47,10 @@ jobs:
 
       - name: Install elf2uf2-rs
         run: cargo install elf2uf2-rs
-      - name: Help
-        run: ls -a ; ls target/ ; ls target/thumbv6m-none-eabi/release; ls target/thumbv6m-none-eabi/release/rp2040-usb-cdc;
       - name: Convert ELF to UF2
         run: |
           elf2uf2-rs \
-            target/thumbv6m-none-eabi/release/rp2040-usb-cdc/rp2040-usb-cdc \
+            target/thumbv6m-none-eabi/release/rp2040-usb-cdc \
             rp2040-usb-cdc.uf2
 
       - name: Upload UF2 artifact
