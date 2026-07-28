@@ -30,12 +30,14 @@ use crate::tasks::usb::usb_bridge_task;
 
 use {defmt_rtt as _, panic_probe as _};
 
+const STARTING_BAUD_RATE: u32 = 115_200;
+
 static mut CORE1_STACK: Stack<4096> = Stack::new();
 static EXECUTOR1: StaticCell<Executor> = StaticCell::new();
 
-static BRIDGE0: BridgeChannels = BridgeChannels::new();
-static BRIDGE1: BridgeChannels = BridgeChannels::new();
-static BRIDGE2: BridgeChannels = BridgeChannels::new();
+static BRIDGE0: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
+static BRIDGE1: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
+static BRIDGE2: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
 
 fn enable_pullup(pin: u32) {
     unsafe {
@@ -100,7 +102,7 @@ async fn main(spawner: Spawner) {
 
     enable_pullup(27);
     enable_pullup(28);
-    enable_pullup(12);
+    enable_pullup(11);
     let uart1 = PioUart::new(115_200, &mut common, sm0, sm1, p.PIN_27, p.PIN_2);
     let uart2 = PioUart::new(115_200, &mut common, sm2, sm3, p.PIN_28, p.PIN_1);
     let uart3 = PioUart::new(

@@ -35,32 +35,73 @@ impl Handler for TripleCdcControlHandler {
 
             match req.index {
                 0 => {
-                    defmt::info!("USB Porta 0 -> Novo Baud: {}", new_baud);
+                    defmt::info!("USB Port 0 -> New Baud: {}", new_baud);
                     let _ = self.bridge0.baud_rate.try_send(new_baud);
+                    self.bridge0
+                        .current_baud_rate
+                        .store(new_baud, core::sync::atomic::Ordering::Relaxed);
                 }
                 2 => {
-                    defmt::info!("USB Porta 1 -> Novo Baud: {}", new_baud);
+                    defmt::info!("USB Port 1 -> New Baud: {}", new_baud);
                     let _ = self.bridge1.baud_rate.try_send(new_baud);
+                    self.bridge1
+                        .current_baud_rate
+                        .store(new_baud, core::sync::atomic::Ordering::Relaxed);
                 }
                 4 => {
-                    defmt::info!("USB Porta 2 -> Novo Baud: {}", new_baud);
+                    defmt::info!("USB Port 2 -> New Baud: {}", new_baud);
                     let _ = self.bridge2.baud_rate.try_send(new_baud);
+                    self.bridge2
+                        .current_baud_rate
+                        .store(new_baud, core::sync::atomic::Ordering::Relaxed);
                 }
                 _ => {
-                    defmt::debug!(
-                        "SET_LINE_CODING recebido na interface inesperada: {}",
-                        req.index
-                    );
+                    defmt::debug!("SET_LINE_CODING received on wrong interface: {}", req.index);
                 }
             }
         }
         Some(OutResponse::Accepted)
     }
 
-    fn control_in<'a>(&'a mut self, _req: Request, _buf: &'a mut [u8]) -> Option<InResponse<'a>> {
+    fn control_in<'a>(&'a mut self, req: Request, data: &'a mut [u8]) -> Option<InResponse<'a>> {
+        if req.request == 0x21 && data.len() >= 7 {
+            let mut baud: u32 = 115_200;
+            match req.index {
+                0 => {
+                    defmt::info!("USB Port 0 -> Baud: {}", baud);
+                    baud = self
+                        .bridge0
+                        .current_baud_rate
+                        .load(core::sync::atomic::Ordering::Relaxed);
+                }
+                2 => {
+                    defmt::info!("USB Port 1 -> Baud: {}", baud);
+                    baud = self
+                        .bridge1
+                        .current_baud_rate
+                        .load(core::sync::atomic::Ordering::Relaxed);
+                }
+                4 => {
+                    defmt::info!("USB Port 2 -> Baud: {}", baud);
+                    baud = self
+                        .bridge2
+                        .current_baud_rate
+                        .load(core::sync::atomic::Ordering::Relaxed);
+                }
+                _ => {
+                    defmt::debug!("Command 21 receicved on wrong interface: {}", req.index);
+                }
+            }
+            data[0..4].copy_from_slice(&baud.to_le_bytes());
+            data[4] = 0; // 1 stop bit
+            data[5] = 0; // Parity: None
+            data[6] = 8; // 8 data bits
+            return Some(InResponse::Accepted(&data[..7]));
+        }
         None
     }
 }
+
 #[embassy_executor::task]
 pub async fn usb_task(mut usb: UsbDevice<'static, Driver<'static, USB>>) -> ! {
     defmt::info!("USB Started");
