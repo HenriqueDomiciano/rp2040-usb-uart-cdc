@@ -9,9 +9,9 @@ pub struct Packet {
 }
 
 pub struct BridgeChannels {
-    pub usb_to_uart: Channel<CriticalSectionRawMutex, Packet, 4>,
-    pub uart_to_usb: Channel<CriticalSectionRawMutex, Packet, 4>,
-    pub baud_rate: Channel<CriticalSectionRawMutex, u32, 4>,
+    pub usb_to_uart: Channel<CriticalSectionRawMutex, Packet, 32>,
+    pub uart_to_usb: Channel<CriticalSectionRawMutex, Packet, 32>,
+    pub baud_rate: Channel<CriticalSectionRawMutex, u32, 32>,
     pub current_baud_rate: AtomicU32,
 }
 
