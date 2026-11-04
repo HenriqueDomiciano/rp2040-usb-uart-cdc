@@ -130,7 +130,6 @@ pub async fn usb_bridge_task(
     let disconnect_signal: Signal<CriticalSectionRawMutex, ()> = Signal::new();
     loop {
         defmt::info!("USB waiting connection");
-        // Wait for both sides to be connected
         rx_cdc.wait_connection().await;
         tx_cdc.wait_connection().await;
         defmt::info!("USB connected");
@@ -191,6 +190,7 @@ pub async fn usb_bridge_task(
                             Ok(_) => {}
                             Err(_) => {
                                 defmt::info!("USB TX disconnected");
+                                disconnect_signal.signal(());
                                 break;
                             }
                         }

@@ -90,7 +90,13 @@ where
     let uart_tx_flow = async {
         loop {
             let packet = channels.usb_to_uart.receive().await;
-            tx.write_all(&packet.data[..packet.len]).await.ok();
+            match tx.write_all(&packet.data[..packet.len]).await {
+                Ok(_) => {}
+                Err(err) => {
+                    defmt::error!("UART TX write failed: {:?}", err);
+                    break;
+                }
+            }
         }
     };
 
