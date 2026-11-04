@@ -88,6 +88,7 @@ When USB disconnects:
 2. `usb_tx` is woken via `select()` on the signal and exits cleanly
 3. Both channels are flushed to discard stale data
 4. The outer loop calls `wait_connection()` until USB reconnects
+5. DTR control, cleaning on UART closing
 
 ### WS2812 Driver
 

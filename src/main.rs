@@ -39,13 +39,6 @@ static BRIDGE0: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
 static BRIDGE1: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
 static BRIDGE2: BridgeChannels = BridgeChannels::new(STARTING_BAUD_RATE);
 
-fn enable_pullup(pin: u32) {
-    unsafe {
-        const PAD_BANK0_BASE: u32 = 0x4001c000;
-
-        *((PAD_BANK0_BASE + (pin * 4) + 4) as *mut u32) |= 1 << 3;
-    }
-}
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => InterruptHandler<PIO0>;
     PIO1_IRQ_0 => InterruptHandler<PIO1>;
@@ -100,9 +93,6 @@ async fn main(spawner: Spawner) {
         ..
     } = Pio::new(p.PIO1, Irqs);
 
-    enable_pullup(27);
-    enable_pullup(28);
-    enable_pullup(11);
     let uart1 = PioUart::new(115_200, &mut common, sm0, sm1, p.PIN_27, p.PIN_2);
     let uart2 = PioUart::new(115_200, &mut common, sm2, sm3, p.PIN_28, p.PIN_1);
     let uart3 = PioUart::new(

@@ -48,8 +48,10 @@ impl Handler for TripleCdcControlHandler {
                 let dtr = (req.value & 0x01) != 0;
                 bridge.dtr.store(dtr, Ordering::Release);
                 bridge.dtr_signal.signal(dtr);
+                bridge.usb_to_uart.clear();
+                bridge.uart_to_usb.clear();
                 None
-            },
+            }
             0x20 if data.len() >= 7 => {
                 let new_baud = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
                 let _ = bridge.baud_rate.try_send(new_baud);
@@ -119,7 +121,6 @@ impl From<EndpointError> for Disconnected {
     }
 }
 
-
 #[embassy_executor::task(pool_size = 3)]
 pub async fn usb_bridge_task(
     cdc: CdcAcmClass<'static, Driver<'static, USB>>,
@@ -128,11 +129,11 @@ pub async fn usb_bridge_task(
     let (mut tx_cdc, mut rx_cdc) = cdc.split();
 
     loop {
-        channels.dtr_signal.reset();          // forget stale state from the last session
+        channels.dtr_signal.reset(); // forget stale state from the last session
         rx_cdc.wait_connection().await;
         tx_cdc.wait_connection().await;
         defmt::info!("USB connected");
-         while !channels.dtr.load(Ordering::Acquire) {
+        while !channels.dtr.load(Ordering::Acquire) {
             let drain = async {
                 loop {
                     let _ = channels.uart_to_usb.receive().await; // dropped
@@ -154,7 +155,8 @@ pub async fn usb_bridge_task(
                     Ok(n) if n > 0 => {
                         let mut data = [0u8; 64];
                         data[..n].copy_from_slice(&buf[..n]);
-                        channels.usb_to_uart
+                        channels
+                            .usb_to_uart
                             .send(crate::bridge::channels::Packet { data, len: n })
                             .await;
                     }
@@ -173,9 +175,7 @@ pub async fn usb_bridge_task(
             }
         };
 
-        let dtr_lost = async {
-            while channels.dtr_signal.wait().await {}
-        };
+        let dtr_lost = async { while channels.dtr_signal.wait().await {} };
 
         select3(usb_rx, usb_tx, dtr_lost).await;
 
