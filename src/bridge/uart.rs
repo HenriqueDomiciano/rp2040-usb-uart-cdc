@@ -92,8 +92,7 @@ where
             let packet = channels.usb_to_uart.receive().await;
             match tx.write_all(&packet.data[..packet.len]).await {
                 Ok(_) => {}
-                Err(err) => {
-                    defmt::error!("UART TX write failed: {:?}", err);
+                Err(_) => {
                     break;
                 }
             }
