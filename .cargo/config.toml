@@ -1,6 +1,9 @@
 [build]
 target = "thumbv6m-none-eabi"
 
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+linker = "flip-link"
+
 [target.thumbv6m-none-eabi]
 runner = "probe-rs run --chip rp2040 --rtt-scan-memory"
 rustflags = [
